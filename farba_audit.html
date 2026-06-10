@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1D9E75">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FARBA Аудит">
+<title>FARBA — Аудит полки</title>
+<link rel="manifest" id="pwa-manifest">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F7F5;color:#1A1A1A;padding:0;overscroll-behavior:none}
+.screen{display:none;padding:16px;max-width:480px;margin:0 auto}
+.screen.active{display:block}
+.top-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #E5E5E2}
+.back-btn{font-size:14px;color:#1D9E75;background:none;border:none;cursor:pointer;padding:4px 0;font-weight:500}
+.screen-title{font-size:17px;font-weight:600;color:#1A1A1A}
+.hint{font-size:14px;color:#666;margin-bottom:12px}
+.client-input-row{display:flex;gap:8px;margin-bottom:12px}
+.client-input-row input{flex:1;font-size:15px;padding:10px 12px;border-radius:10px;border:1px solid #D0D0CC;background:#fff;color:#1A1A1A;font-family:inherit;-webkit-appearance:none}
+.add-btn{font-size:14px;padding:10px 16px;border-radius:10px;border:none;background:#1D9E75;color:#fff;cursor:pointer;white-space:nowrap;font-weight:600;-webkit-appearance:none}
+.client-list{display:flex;flex-direction:column;gap:6px}
+.client-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;border:1px solid #E5E5E2;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.client-row.done{border-color:#1D9E75}
+.client-row-name{font-size:15px;font-weight:500}
+.client-row-meta{font-size:12px;color:#999}
+.client-row.done .client-row-meta{color:#1D9E75}
+.legend{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.legend-item{font-size:11px;padding:3px 8px;border-radius:20px;border:1px solid}
+.cat-card{background:#fff;border:1px solid #E5E5E2;border-radius:12px;margin-bottom:8px;overflow:hidden}
+.cat-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:#FAFAF8;-webkit-tap-highlight-color:transparent}
+.cat-name{font-size:14px;font-weight:500}
+.cat-badge{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid #D0D0CC;color:#999}
+.cat-badge.filled{background:#E1F5EE;border-color:#1D9E75;color:#0F6E56}
+.cat-body{padding:14px;display:none}
+.cat-body.open{display:block}
+.field-label{font-size:12px;color:#666;margin-bottom:5px;display:block}
+.field-row{margin-bottom:14px}
+.brand-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.chip{font-size:12px;padding:5px 10px;border-radius:20px;border:1px solid #D0D0CC;cursor:pointer;color:#666;background:#fff;user-select:none;-webkit-tap-highlight-color:transparent}
+.chip-comp{font-size:10px;opacity:0.7;margin-left:3px}
+.chip.missing-on{background:#FAEEDA;border-color:#BA7517;color:#854F0B}
+.share-row{display:flex;gap:6px;flex-wrap:wrap}
+.share-btn{font-size:12px;padding:7px 12px;border-radius:20px;border:1px solid #D0D0CC;cursor:pointer;color:#666;background:#fff;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
+.share-btn.on-10{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D;border-width:2px}
+.share-btn.on-30{background:#FAEEDA;border-color:#BA7517;color:#854F0B;border-width:2px}
+.share-btn.on-50{background:#E6F1FB;border-color:#378ADD;color:#185FA5;border-width:2px}
+.share-btn.on-70{background:#EAF3DE;border-color:#639922;color:#3B6D11;border-width:2px}
+.price-row{display:flex;gap:6px}
+.price-btn{flex:1;font-size:12px;padding:8px 4px;border-radius:10px;border:1px solid #D0D0CC;cursor:pointer;text-align:center;color:#666;background:#fff;-webkit-appearance:none;-webkit-tap-highlight-color:transparent}
+.price-btn.on-low{background:#EAF3DE;border-color:#639922;color:#3B6D11;border-width:2px}
+.price-btn.on-eq{background:#E6F1FB;border-color:#378ADD;color:#185FA5;border-width:2px}
+.price-btn.on-high{background:#FAECE7;border-color:#D85A30;color:#993C1D;border-width:2px}
+textarea{width:100%;font-size:14px;padding:10px;border-radius:10px;border:1px solid #D0D0CC;background:#fff;color:#1A1A1A;resize:none;font-family:inherit;min-height:60px;-webkit-appearance:none}
+.custom-input{width:100%;font-size:14px;padding:8px 10px;border-radius:10px;border:1px solid #D0D0CC;background:#fff;color:#1A1A1A;font-family:inherit;margin-top:6px;-webkit-appearance:none}
+.skus-wrap{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.skus-input{width:70px;font-size:16px;padding:7px 8px;border-radius:10px;border:1px solid #D0D0CC;background:#fff;color:#1A1A1A;font-family:inherit;text-align:center;-webkit-appearance:none}
+.divider{height:1px;background:#F0F0EC;margin:12px 0}
+.save-btn{width:100%;padding:14px;font-size:16px;font-weight:600;background:#1D9E75;color:#fff;border:none;border-radius:12px;cursor:pointer;margin-top:16px;-webkit-appearance:none}
+.btn-row{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.csv-btn{width:100%;padding:14px;font-size:15px;font-weight:600;background:#1D9E75;color:#fff;border:none;border-radius:12px;cursor:pointer;-webkit-appearance:none}
+.copy-btn,.new-btn{width:100%;padding:13px;font-size:14px;font-weight:500;background:#fff;color:#1A1A1A;border:1px solid #D0D0CC;border-radius:12px;cursor:pointer;-webkit-appearance:none}
+.summary-block{margin-bottom:16px;border-bottom:1px solid #E5E5E2;padding-bottom:14px}
+.summary-block:last-child{border-bottom:none}
+.summary-cat{font-size:14px;font-weight:600;margin-bottom:8px}
+.summary-row{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:5px}
+.summary-label{color:#888;width:110px;flex-shrink:0}
+.summary-val{flex:1;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:20px}
+.b-miss{background:#FAEEDA;color:#854F0B}
+.b-farba{background:#E1F5EE;color:#0F6E56}
+.b-price-low{background:#EAF3DE;color:#3B6D11}
+.b-price-eq{background:#E6F1FB;color:#185FA5}
+.b-price-high{background:#FAECE7;color:#993C1D}
+.install-banner{background:#1D9E75;color:#fff;padding:12px 16px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.install-banner button{background:#fff;color:#1D9E75;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.install-banner .close-banner{background:transparent;color:#fff;font-size:18px;padding:0 4px;font-weight:300}
+</style>
+</head>
+<body>
+
+<div id="install-banner" style="display:none" class="install-banner">
+  <span>Установи как приложение</span>
+  <button id="btn-install">Установить</button>
+  <button class="close-banner" id="btn-close-banner">✕</button>
+</div>
+
+<div id="s-clients" class="screen active">
+  <div class="top-bar" style="border-bottom:none;margin-bottom:8px">
+    <span class="screen-title">Выезд B2B — аудит полки</span>
+  </div>
+  <p class="hint">Введи название магазина и начни аудит</p>
+  <div class="client-input-row">
+    <input id="new-client-input" placeholder="Название магазина..." type="text" />
+    <button class="add-btn" id="btn-add">+ Добавить</button>
+  </div>
+  <div class="client-list" id="client-list"></div>
+</div>
+
+<div id="s-audit" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" id="btn-back-audit">← Магазины</button>
+    <span class="screen-title" id="audit-title"></span>
+  </div>
+  <div class="legend" id="comp-legend"></div>
+  <div id="cat-list"></div>
+  <button class="save-btn" id="btn-save">✓ Завершить аудит</button>
+</div>
+
+<div id="s-summary" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" id="btn-back-summary">← Магазины</button>
+    <span class="screen-title" id="sum-title"></span>
+  </div>
+  <div id="sum-content"></div>
+  <div class="btn-row">
+    <button class="csv-btn" id="btn-csv">⬇ Скачать CSV</button>
+    <button class="copy-btn" id="btn-copy">⎘ Скопировать текстом</button>
+    <button class="new-btn" id="btn-new">+ Новый магазин</button>
+  </div>
+</div>
+
+<script>
+// ── PWA: inject manifest inline ──────────────────────────────────────────────
+(function(){
+  var manifest={
+    name:"FARBA Аудит полки",
+    short_name:"FARBA Аудит",
+    description:"Аудит полки на выезде B2B",
+    start_url:".",
+    display:"standalone",
+    background_color:"#F7F7F5",
+    theme_color:"#1D9E75",
+    orientation:"portrait",
+    icons:[
+      {src:"data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#1D9E75"/><text x="96" y="130" font-size="100" text-anchor="middle" fill="white" font-family="Arial Black,sans-serif">F</text></svg>'),sizes:"192x192",type:"image/svg+xml"},
+      {src:"data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#1D9E75"/><text x="256" y="350" font-size="280" text-anchor="middle" fill="white" font-family="Arial Black,sans-serif">F</text></svg>'),sizes:"512x512",type:"image/svg+xml"}
+    ]
+  };
+  var blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  document.getElementById('pwa-manifest').href=url;
+})();
+
+// ── PWA: register service worker inline ─────────────────────────────────────
+if('serviceWorker' in navigator){
+  var swCode=[
+    'var CACHE="farba-v1";',
+    'self.addEventListener("install",function(e){self.skipWaiting();});',
+    'self.addEventListener("activate",function(e){e.waitUntil(clients.claim());});',
+    'self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request);}));});'
+  ].join('\n');
+  var swBlob=new Blob([swCode],{type:'text/javascript'});
+  var swUrl=URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(function(){});
+}
+
+// ── PWA: install prompt ──────────────────────────────────────────────────────
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById('install-banner').style.display='flex';
+});
+document.getElementById('btn-install').addEventListener('click',function(){
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(){deferredPrompt=null;document.getElementById('install-banner').style.display='none';});}
+});
+document.getElementById('btn-close-banner').addEventListener('click',function(){
+  document.getElementById('install-banner').style.display='none';
+});
+
+// ── App data ─────────────────────────────────────────────────────────────────
+var COMP_COLORS={"Апельсин":"#BA7517","Стиалит":"#D85A30","Люрсан":"#E24B4A","Альфа Комерц":"#7F77DD","Панотон":"#378ADD","Мир ремонта":"#D4537E","ТДМ":"#888780","220 Вольт":"#639922"};
+var COMP_BG={"Апельсин":"#FAEEDA","Стиалит":"#FAECE7","Люрсан":"#FCEBEB","Альфа Комерц":"#EEEDFE","Панотон":"#E6F1FB","Мир ремонта":"#FBEAF0","ТДМ":"#F1EFE8","220 Вольт":"#EAF3DE"};
+var COMP_TEXT={"Апельсин":"#854F0B","Стиалит":"#993C1D","Люрсан":"#A32D2D","Альфа Комерц":"#3C3489","Панотон":"#185FA5","Мир ремонта":"#993556","ТДМ":"#444441","220 Вольт":"#3B6D11"};
+var CATS=[
+  {name:"Пена, Силиконы",farba:["Tytan","Гризли","Лакрисил","Мальва","Dufa","Smart Fix"],comps:{"Стиалит":["Sibax","Grover","Eskaro"],"Люрсан":["Antia","SomaFix","Корабельная"],"Мир ремонта":["Apel","Sibax","FIXED(SGS)","Sublime"]}},
+  {name:"Строительные смеси",farba:["Farbax","EuroGips","Техногипс","Кнауф","Крайзел","CasaMare","Ceresit","Baumit","Строитель"],comps:{"Люрсан":["EKO"],"Альфа Комерц":["Горизонт","Клебер","VipGips","Ceresit"]}},
+  {name:"Гипсокартон, профиля",farba:["Техногипс","Индастри","Доброва"],comps:{"Люрсан":["Rigips"],"Альфа Комерц":["Siniat Nida"],"Мир ремонта":["(без ТМ)"]}},
+  {name:"Каналья, Полипропилен",farba:["AQUA","ASG","Koningfit"],comps:{"Люрсан":["SPK","Waterstal","NOVA","Aquer"],"Панотон":["AQUA"]}},
+  {name:"Сифоны, Арматура для бачка",farba:["Сантехпласт"],comps:{}},
+  {name:"Краски, Эмаль",farba:["Dufa","Farbex","Dekart","Палитра","Зебра"],comps:{"Люрсан":["Корабельная","Фазенда"]}},
+  {name:"ВД Краска, Грунтовки",farba:["Dufa","Profilux","Prizma","Тиора","Рута"],comps:{"Апельсин":["NanoFarb"],"Стиалит":["Aura"],"Люрсан":["Корабельная","Фазенда","Colorina"],"Мир ремонта":["dekart","maxmima","farbex","weiser","colorina","delfi","Bellini"]}},
+  {name:"Инструмент",farba:["Mann","Yato","Fixtech","Fastertools","DRAUMET"],comps:{"Люрсан":["MTX"],"ТДМ":["TDM (диски)"]}},
+  {name:"Малярный инструмент",farba:["Mann","Yato","Fixtech","Fastertools","HT.tools","DRAUMET"],comps:{"Стиалит":["Hardy","M7"],"Люрсан":["BAUX","BAUWELT","MTX","WELT","Строитель","LIDER","Sparta","DELI"]}},
+  {name:"Электрика",farba:["TDM","Horoz","Viko","Enext"],comps:{"Люрсан":["TDM","Gunsan","ENEXT","HOROZ"],"ТДМ":["TDM"],"220 Вольт":["220 Вольт"]}},
+  {name:"Линолеум, плинтуса, багет",farba:["Kronopol","Kastamonu","Tarkett","IVC","ОМИС","KADI"],comps:{"Люрсан":["AGT","Peli","GRABO","JUTEKS"]}},
+  {name:"Минвата, Пенопласт",farba:["FibranGEO","Stone Wool","НТ Фасад","Starflex","Penoboard","Symmer"],comps:{"Люрсан":["pnp","izovat"],"Альфа Комерц":["izocam"],"Мир ремонта":["izocam"]}}
+];
+
+var clients=[],currentClient=null,auditState={},savedAudits={};
+
+// ── Persist to localStorage ──────────────────────────────────────────────────
+function loadState(){
+  try{
+    var d=localStorage.getItem('farba_data');
+    if(d){var p=JSON.parse(d);clients=p.clients||[];savedAudits=p.savedAudits||{};}
+  }catch(e){}
+}
+function saveState(){
+  try{localStorage.setItem('farba_data',JSON.stringify({clients:clients,savedAudits:savedAudits}));}catch(e){}
+}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function addClient(){
+  var inp=document.getElementById('new-client-input');
+  var name=inp.value.trim();
+  if(!name)return;
+  if(clients.indexOf(name)===-1)clients.push(name);
+  inp.value='';
+  saveState();
+  renderClients();
+  openAudit(name);
+}
+
+function renderClients(){
+  var list=document.getElementById('client-list');
+  if(!clients.length){list.innerHTML='<p style="font-size:14px;color:#999;padding:8px 0">Нет добавленных магазинов</p>';return;}
+  list.innerHTML='';
+  clients.forEach(function(c){
+    var done=!!savedAudits[c];
+    var filled=done?Object.keys(savedAudits[c]).filter(function(k){return hasAnyData(savedAudits[c][k]);}).length:0;
+    var row=document.createElement('div');
+    row.className='client-row'+(done?' done':'');
+    row.innerHTML='<span class="client-row-name">'+escH(c)+'</span>'
+      +'<span class="client-row-meta">'+(done?'✓ '+filled+' групп':'не начат')+'</span>';
+    row.addEventListener('click',function(){openAudit(c);});
+    list.appendChild(row);
+  });
+}
+
+function hasAnyData(s){return s&&((s.compsOn&&s.compsOn.length)||s.farbaSKUs||s.share||s.price||(s.missingFarba&&s.missingFarba.length)||s.notes);}
+
+function openAudit(client){
+  currentClient=client;
+  auditState=savedAudits[client]?JSON.parse(JSON.stringify(savedAudits[client])):{};
+  document.getElementById('audit-title').textContent=client;
+  renderLegend();renderCats();showScreen('s-audit');
+}
+
+function renderLegend(){
+  var leg=document.getElementById('comp-legend');leg.innerHTML='';
+  Object.keys(COMP_COLORS).forEach(function(c){
+    var span=document.createElement('span');span.className='legend-item';
+    span.style.background=COMP_BG[c];span.style.borderColor=COMP_COLORS[c];span.style.color=COMP_TEXT[c];
+    span.textContent=c;leg.appendChild(span);
+  });
+}
+
+function renderCats(){
+  var list=document.getElementById('cat-list');list.innerHTML='';
+  CATS.forEach(function(cat,ci){
+    var s=auditState[cat.name]||{};var filled=hasAnyData(s);
+    var card=document.createElement('div');card.className='cat-card';
+    var header=document.createElement('div');header.className='cat-header';
+    header.innerHTML='<span class="cat-name">'+escH(cat.name)+'</span><span class="cat-badge'+(filled?' filled':'')+'">'+( filled?'заполнено':'—')+'</span>';
+    header.addEventListener('click',function(){document.getElementById('cb-'+ci).classList.toggle('open');});
+    var body=document.createElement('div');body.className='cat-body';body.id='cb-'+ci;
+
+    // Comp chips
+    var cSec=document.createElement('div');cSec.className='field-row';
+    var cLbl=document.createElement('span');cLbl.className='field-label';cLbl.textContent='Бренды конкурентов на полке';
+    var cChips=document.createElement('div');cChips.className='brand-chips';cChips.id='comp-chips-'+ci;
+    var cInp=document.createElement('input');cInp.className='custom-input';cInp.placeholder='Другой бренд + Enter...';cInp.type='text';
+    cSec.appendChild(cLbl);cSec.appendChild(cChips);cSec.appendChild(cInp);
+
+    var d1=document.createElement('div');d1.className='divider';
+
+    // FARBA
+    var fSec=document.createElement('div');fSec.className='field-row';
+    var fLbl=document.createElement('span');fLbl.className='field-label';fLbl.textContent='FARBA на полке';
+    var skWrap=document.createElement('div');skWrap.className='skus-wrap';
+    var skLbl=document.createElement('span');skLbl.style.cssText='font-size:13px;color:#888';skLbl.textContent='SKU:';
+    var skInp=document.createElement('input');skInp.type='number';skInp.min='0';skInp.className='skus-input';skInp.placeholder='0';skInp.value=s.farbaSKUs||'';
+    skInp.addEventListener('input',function(){setState(cat.name,'farbaSKUs',skInp.value);});
+    skWrap.appendChild(skLbl);skWrap.appendChild(skInp);
+    var mLbl=document.createElement('span');mLbl.className='field-label';mLbl.textContent='Что отсутствует из наших ТМ:';
+    var mChips=document.createElement('div');mChips.className='brand-chips';mChips.id='miss-chips-'+ci;
+    fSec.appendChild(fLbl);fSec.appendChild(skWrap);fSec.appendChild(mLbl);fSec.appendChild(mChips);
+
+    var d2=document.createElement('div');d2.className='divider';
+
+    // Share
+    var shSec=document.createElement('div');shSec.className='field-row';
+    var shLbl=document.createElement('span');shLbl.className='field-label';shLbl.textContent='Доля полки FARBA (визуально)';
+    var shRow=document.createElement('div');shRow.className='share-row';shRow.id='share-'+ci;
+    [['<10%','10'],['10–30%','30'],['30–50%','50'],['>50%','70']].forEach(function(a){
+      var btn=document.createElement('button');btn.className='share-btn'+(s.share===a[1]?' on-'+a[1]:'');btn.textContent=a[0];
+      btn.addEventListener('click',(function(v,b){return function(){setShare(ci,cat.name,v,b);};})(a[1],btn));
+      shRow.appendChild(btn);
+    });
+    shSec.appendChild(shLbl);shSec.appendChild(shRow);
+
+    // Price
+    var prSec=document.createElement('div');prSec.className='field-row';
+    var prLbl=document.createElement('span');prLbl.className='field-label';prLbl.textContent='Цена FARBA vs конкурент';
+    var prRow=document.createElement('div');prRow.className='price-row';
+    [['Ниже','low'],['На уровне','eq'],['Выше','high']].forEach(function(a){
+      var btn=document.createElement('button');btn.className='price-btn'+(s.price===a[1]?' on-'+a[1]:'');btn.textContent=a[0];
+      btn.addEventListener('click',(function(v,b){return function(){setPrice(ci,cat.name,v,b);};})(a[1],btn));
+      prRow.appendChild(btn);
+    });
+    prSec.appendChild(prLbl);prSec.appendChild(prRow);
+
+    // Notes
+    var nSec=document.createElement('div');nSec.className='field-row';
+    var ta=document.createElement('textarea');ta.placeholder='Заметка...';ta.value=s.notes||'';
+    ta.addEventListener('input',function(){setState(cat.name,'notes',ta.value);});
+    nSec.appendChild(ta);
+
+    body.appendChild(cSec);body.appendChild(d1);body.appendChild(fSec);body.appendChild(d2);body.appendChild(shSec);body.appendChild(prSec);body.appendChild(nSec);
+    card.appendChild(header);card.appendChild(body);list.appendChild(card);
+
+    // Fill comp chips
+    var selComps=s.compsOn||[];
+    var allB=[];
+    Object.keys(cat.comps).forEach(function(comp){cat.comps[comp].forEach(function(brand){allB.push({brand:brand,comp:comp});});});
+    (s.customComps||[]).forEach(function(b){allB.push({brand:b,comp:'?'});});
+    allB.forEach(function(obj){
+      var chip=document.createElement('span');var on=selComps.indexOf(obj.brand)!==-1;
+      chip.className='chip'+(on?' on':'');
+      chip.appendChild(document.createTextNode(obj.brand));
+      if(obj.comp!=='?'){var sm=document.createElement('span');sm.className='chip-comp';sm.textContent=obj.comp;chip.appendChild(sm);}
+      if(on&&COMP_BG[obj.comp]){chip.style.background=COMP_BG[obj.comp];chip.style.borderColor=COMP_COLORS[obj.comp];chip.style.color=COMP_TEXT[obj.comp];}
+      chip.addEventListener('click',(function(c,n,cp){return function(){toggleComp(c,ci,cat.name,n,cp);};})(chip,obj.brand,obj.comp));
+      cChips.appendChild(chip);
+    });
+
+    // Fill missing chips
+    var selMiss=s.missingFarba||[];
+    cat.farba.forEach(function(brand){
+      var chip=document.createElement('span');chip.className='chip'+(selMiss.indexOf(brand)!==-1?' missing-on':'');chip.textContent=brand;
+      chip.addEventListener('click',(function(c,n){return function(){toggleMiss(c,ci,cat.name,n);};})(chip,brand));
+      mChips.appendChild(chip);
+    });
+
+    // Custom input
+    cInp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'&&cInp.value.trim()){
+        var brand=cInp.value.trim();var s2=auditState[cat.name]||{};
+        if(!s2.customComps)s2.customComps=[];
+        if(s2.customComps.indexOf(brand)===-1){
+          s2.customComps.push(brand);if(!s2.compsOn)s2.compsOn=[];s2.compsOn.push(brand);
+          auditState[cat.name]=s2;
+          var chip=document.createElement('span');chip.className='chip on';chip.textContent=brand;
+          chip.addEventListener('click',(function(c,n){return function(){toggleComp(c,ci,cat.name,n,'?');};})(chip,brand));
+          cChips.appendChild(chip);
+        }
+        cInp.value='';updateBadge(ci,cat.name);
+      }
+    });
+  });
+}
+
+function toggleComp(chip,ci,catName,brand,comp){
+  var s=auditState[catName]||{};if(!s.compsOn)s.compsOn=[];
+  var idx=s.compsOn.indexOf(brand);
+  if(idx!==-1){s.compsOn.splice(idx,1);chip.classList.remove('on');chip.style.background='';chip.style.borderColor='';chip.style.color='';}
+  else{s.compsOn.push(brand);chip.classList.add('on');if(COMP_BG[comp]){chip.style.background=COMP_BG[comp];chip.style.borderColor=COMP_COLORS[comp];chip.style.color=COMP_TEXT[comp];}}
+  auditState[catName]=s;updateBadge(ci,catName);
+}
+function toggleMiss(chip,ci,catName,brand){
+  var s=auditState[catName]||{};if(!s.missingFarba)s.missingFarba=[];
+  var idx=s.missingFarba.indexOf(brand);
+  if(idx!==-1){s.missingFarba.splice(idx,1);chip.classList.remove('missing-on');}
+  else{s.missingFarba.push(brand);chip.classList.add('missing-on');}
+  auditState[catName]=s;updateBadge(ci,catName);
+}
+function setState(catName,key,val){if(!auditState[catName])auditState[catName]={};auditState[catName][key]=val;}
+function setShare(ci,catName,val,btn){
+  var s=auditState[catName]||{};s.share=val;auditState[catName]=s;
+  document.querySelectorAll('#share-'+ci+' .share-btn').forEach(function(b){b.className='share-btn';});
+  btn.classList.add('on-'+val);updateBadge(ci,catName);
+}
+function setPrice(ci,catName,val,btn){
+  var s=auditState[catName]||{};s.price=val;auditState[catName]=s;
+  btn.closest('.price-row').querySelectorAll('.price-btn').forEach(function(b){b.className='price-btn';});
+  btn.classList.add('on-'+val);updateBadge(ci,catName);
+}
+function updateBadge(ci,catName){
+  var s=auditState[catName]||{};var filled=hasAnyData(s);
+  var cards=document.querySelectorAll('.cat-card');
+  if(cards[ci]){var badge=cards[ci].querySelector('.cat-badge');badge.textContent=filled?'заполнено':'—';badge.className='cat-badge'+(filled?' filled':'');}
+}
+function saveAudit(){
+  savedAudits[currentClient]=JSON.parse(JSON.stringify(auditState));
+  saveState();renderSummary();showScreen('s-summary');
+}
+function getCompForBrand(cat,brand){
+  var found='?';Object.keys(cat.comps).forEach(function(comp){if(cat.comps[comp].indexOf(brand)!==-1)found=comp;});return found;
+}
+function renderSummary(){
+  document.getElementById('sum-title').textContent=currentClient;
+  var priceLabel={low:'Ниже',eq:'На уровне',high:'Выше'};
+  var shareLabel={'10':'<10%','30':'10–30%','50':'30–50%','70':'>50%'};
+  var date=new Date().toLocaleDateString('ru-RU');
+  var html='<p style="font-size:12px;color:#999;margin-bottom:12px">'+date+'</p>';
+  var count=0;
+  CATS.forEach(function(cat){
+    var s=auditState[cat.name];if(!s||!hasAnyData(s))return;count++;
+    html+='<div class="summary-block"><div class="summary-cat">'+escH(cat.name)+'</div>';
+    if(s.compsOn&&s.compsOn.length){
+      html+='<div class="summary-row"><span class="summary-label">Конкуренты</span><span class="summary-val">';
+      s.compsOn.forEach(function(b){var comp=getCompForBrand(cat,b);var bg=COMP_BG[comp]||'#F1EFE8',tc=COMP_TEXT[comp]||'#444441';html+='<span class="badge" style="background:'+bg+';color:'+tc+'">'+escH(b)+' <span style="opacity:0.7;font-size:10px">'+escH(comp)+'</span></span>';});
+      html+='</span></div>';
+    }
+    if(s.farbaSKUs)html+='<div class="summary-row"><span class="summary-label">FARBA SKU</span><span class="summary-val"><span class="badge b-farba">'+escH(s.farbaSKUs)+' SKU</span></span></div>';
+    if(s.missingFarba&&s.missingFarba.length)html+='<div class="summary-row"><span class="summary-label">Нет на полке</span><span class="summary-val">'+s.missingFarba.map(function(b){return '<span class="badge b-miss">'+escH(b)+'</span>';}).join('')+'</span></div>';
+    if(s.share)html+='<div class="summary-row"><span class="summary-label">Доля полки</span><span class="summary-val">'+(shareLabel[s.share]||s.share)+'</span></div>';
+    if(s.price){var pcls=s.price==='low'?'b-price-low':s.price==='eq'?'b-price-eq':'b-price-high';html+='<div class="summary-row"><span class="summary-label">Цена</span><span class="summary-val"><span class="badge '+pcls+'">'+priceLabel[s.price]+' конкурента</span></span></div>';}
+    if(s.notes)html+='<div class="summary-row"><span class="summary-label">Заметки</span><span class="summary-val" style="color:#888">'+escH(s.notes)+'</span></div>';
+    html+='</div>';
+  });
+  if(!count)html+='<p style="font-size:14px;color:#999">Нет заполненных групп.</p>';
+  document.getElementById('sum-content').innerHTML=html;
+}
+function buildCSV(){
+  var priceLabel={low:'Ниже конкурента',eq:'На уровне',high:'Выше конкурента'};
+  var shareLabel={'10':'<10%','30':'10–30%','50':'30–50%','70':'>50%'};
+  var date=new Date().toLocaleDateString('ru-RU');
+  var rows=[['Дата','Магазин','Товарная группа','Конкурент','ТМ конкурента','FARBA SKU','Отсутствует ТМ FARBA','Доля полки FARBA','Цена FARBA','Заметки']];
+  CATS.forEach(function(cat){
+    var s=auditState[cat.name];if(!s||!hasAnyData(s))return;
+    var shareVal=s.share?(shareLabel[s.share]||s.share):'';var priceVal=s.price?priceLabel[s.price]:'';
+    var farbaSKUs=s.farbaSKUs||'';var missing=s.missingFarba&&s.missingFarba.length?s.missingFarba.join('; '):'';var notes=s.notes||'';
+    if(s.compsOn&&s.compsOn.length){
+      var byComp={};s.compsOn.forEach(function(b){var comp=getCompForBrand(cat,b);if(!byComp[comp])byComp[comp]=[];byComp[comp].push(b);});
+      Object.keys(byComp).forEach(function(comp){rows.push([date,currentClient,cat.name,comp,byComp[comp].join('; '),farbaSKUs,missing,shareVal,priceVal,notes]);});
+    } else {rows.push([date,currentClient,cat.name,'','',farbaSKUs,missing,shareVal,priceVal,notes]);}
+  });
+  return rows.map(function(r){return r.map(function(cell){var str=String(cell).replace(/"/g,'""');return(str.indexOf(',')!==-1||str.indexOf('"')!==-1||str.indexOf('\n')!==-1)?'"'+str+'"':str;}).join(',');}).join('\r\n');
+}
+function downloadCSV(){
+  var csv='\uFEFF'+buildCSV();
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var date=new Date().toISOString().slice(0,10);
+  var safeName=currentClient.replace(/[^a-zA-Z0-9]/g,'_');
+  var a=document.createElement('a');a.href=url;a.download='audit_'+safeName+'_'+date+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+function copyText(){
+  var priceLabel={low:'Ниже конкурента',eq:'На уровне',high:'Выше конкурента'};
+  var shareLabel={'10':'<10%','30':'10–30%','50':'30–50%','70':'>50%'};
+  var date=new Date().toLocaleDateString('ru-RU');
+  var txt='АУДИТ ПОЛКИ: '+currentClient+'\nДата: '+date+'\n'+'—'.repeat(30)+'\n';
+  CATS.forEach(function(cat){
+    var s=auditState[cat.name];if(!s||!hasAnyData(s))return;
+    txt+='\n['+cat.name+']\n';
+    if(s.compsOn&&s.compsOn.length){var byComp={};s.compsOn.forEach(function(b){var comp=getCompForBrand(cat,b);if(!byComp[comp])byComp[comp]=[];byComp[comp].push(b);});Object.keys(byComp).forEach(function(comp){txt+='  '+comp+': '+byComp[comp].join(', ')+'\n';});}
+    if(s.farbaSKUs)txt+='  FARBA: '+s.farbaSKUs+' SKU\n';
+    if(s.missingFarba&&s.missingFarba.length)txt+='  Нет на полке: '+s.missingFarba.join(', ')+'\n';
+    if(s.share)txt+='  Доля полки: '+(shareLabel[s.share]||s.share)+'\n';
+    if(s.price)txt+='  Цена: '+priceLabel[s.price]+'\n';
+    if(s.notes)txt+='  Заметки: '+s.notes+'\n';
+  });
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){flashBtn('btn-copy','✓ Скопировано!');});}
+  else{var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');flashBtn('btn-copy','✓ Скопировано!');}catch(e){}document.body.removeChild(ta);}
+}
+function flashBtn(id,text){var btn=document.getElementById(id);if(!btn)return;var orig=btn.textContent;btn.textContent=text;setTimeout(function(){btn.textContent=orig;},2000);}
+
+// ── Wire buttons ─────────────────────────────────────────────────────────────
+document.getElementById('btn-add').addEventListener('click',addClient);
+document.getElementById('new-client-input').addEventListener('keydown',function(e){if(e.key==='Enter')addClient();});
+document.getElementById('btn-back-audit').addEventListener('click',function(){showScreen('s-clients');renderClients();});
+document.getElementById('btn-save').addEventListener('click',saveAudit);
+document.getElementById('btn-back-summary').addEventListener('click',function(){showScreen('s-clients');renderClients();});
+document.getElementById('btn-csv').addEventListener('click',downloadCSV);
+document.getElementById('btn-copy').addEventListener('click',copyText);
+document.getElementById('btn-new').addEventListener('click',function(){showScreen('s-clients');renderClients();});
+
+loadState();
+renderClients();
+</script>
+</body>
+</html>
